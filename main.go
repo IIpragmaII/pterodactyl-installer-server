@@ -31,6 +31,11 @@ func runCommand(client *goph.Client, cmd string) error {
 	return nil
 }
 
+var scripts = [2]string{
+	"scripts/install_dependencies.sh",
+	"scripts/db_setup.sh",
+}
+
 func main() {
 	// Start new ssh connection with private key.
 	auth, err := goph.Key(certPath, certPassword)
@@ -47,7 +52,11 @@ func main() {
 	// Defer closing the network connection.
 	defer client.Close()
 
-	fileData, _ := os.ReadFile("scripts/install_dependencies.sh")
+	for _, script := range scripts {
+		fileData, _ := os.ReadFile(script)
+		runCommand(client, string(fileData))
+	}
 
-	runCommand(client, string(fileData))
+	err = client.Upload("./configs/environment", "/root/environment")
+
 }
