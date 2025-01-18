@@ -6,4 +6,4 @@ COPY configs .
 COPY scripts .
 COPY pterodactyl-installer-server .
 
-ENTRYPOINT ["pterodactyl-installer-server"]
+ENTRYPOINT ["./pterodactyl-installer-server"]
