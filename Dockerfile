@@ -1,4 +1,4 @@
-FROM scratch
+FROM ubuntu:latest
 
 USER 100
 
