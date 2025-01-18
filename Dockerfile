@@ -1,7 +1,12 @@
-FROM ubuntu:latest
+FROM scratch
 
 USER 100
 
-COPY pterodactyl-installer-server /bin/pterodactyl-installer-server
+RUN mkdir /installer
+WORKDIR /installer
+
+COPY configs .
+COPY scripts .
+COPY pterodactyl-installer-server .
 
 ENTRYPOINT ["/bin/pterodactyl-installer-server"]
