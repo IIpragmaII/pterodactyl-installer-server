@@ -1,9 +1,9 @@
 FROM scratch
 
-USER 100
-
 RUN mkdir /installer
 WORKDIR /installer
+
+USER 100
 
 COPY configs .
 COPY scripts .
