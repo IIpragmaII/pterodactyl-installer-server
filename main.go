@@ -59,13 +59,15 @@ func runCommand(client *goph.Client, cmd string) error {
 	return nil
 }
 
-var steps = [6]*step{
-	{stepType: RUN, file: "scripts/install_dependencies.sh"},
-	{stepType: RUN, file: "scripts/db_setup.sh"},
-	{stepType: COPY, file: "configs/environment", destination: "/var/www/pterodactyl/.env"},
-	{stepType: RUN, file: "scripts/env_configuration.sh"},
-	{stepType: COPY, file: "configs/pteroq.service", destination: "/etc/systemd/system/pteroq.service"},
-	{stepType: RUN, file: "scripts/queue_listener.sh"},
+var steps = [2]*step{
+	//{stepType: RUN, file: "scripts/install_dependencies.sh"},
+	//{stepType: RUN, file: "scripts/db_setup.sh"},
+	// {stepType: COPY, file: "configs/environment", destination: "/var/www/pterodactyl/.env"},
+	// {stepType: RUN, file: "scripts/env_configuration.sh"},
+	// {stepType: COPY, file: "configs/pteroq.service", destination: "/etc/systemd/system/pteroq.service"},
+	// {stepType: RUN, file: "scripts/queue_listener.sh"},
+	{stepType: COPY, file: "configs/nginx.conf", destination: "/etc/nginx/sites-available/pterodactyl.conf"},
+	{stepType: RUN, file: "scripts/nginx_setup.sh"},
 }
 
 func getFileContent(file string, settings *settings) string {
@@ -101,6 +103,7 @@ func uploadFile(client *goph.Client, content string, destination string) error {
 }
 
 func main() {
+	generateCert(serverIp)
 	// Start new ssh connection with private key.
 	auth, err := goph.Key(certPath, certPassword)
 	if err != nil {
@@ -115,6 +118,10 @@ func main() {
 
 	// Defer closing the network connection.
 	defer client.Close()
+
+	cert, key := generateCert(serverIp)
+	err = uploadFile(client, cert, "/etc/ssl/pterodactyl-cert.pem")
+	err = uploadFile(client, key, "/etc/ssl/pterodactyl-key.pem")
 
 	settings := &settings{
 		DbPassword: &setting{value: os.Getenv("DB_PASSWORD"), placeholder: "{{db_password}}"},
