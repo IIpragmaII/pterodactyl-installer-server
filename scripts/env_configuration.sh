@@ -36,3 +36,7 @@ php artisan p:user:make --email="{{email}}" \
 
 # If using NGINX, Apache or Caddy (not on RHEL / Rocky Linux / AlmaLinux)
 chown -R www-data:www-data /var/www/pterodactyl/*
+
+cp /etc/ssl/pterodactyl-cert.pem /usr/local/share/ca-certificates/pterodactyl-cert.crt
+
+update-ca-certificates

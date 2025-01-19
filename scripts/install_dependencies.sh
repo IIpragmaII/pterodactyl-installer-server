@@ -1,3 +1,6 @@
+apt update 
+apt upgrade -y
+
 # Add "add-apt-repository" command
 apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 

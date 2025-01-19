@@ -59,15 +59,25 @@ func runCommand(client *goph.Client, cmd string) error {
 	return nil
 }
 
-var steps = [2]*step{
-	//{stepType: RUN, file: "scripts/install_dependencies.sh"},
-	//{stepType: RUN, file: "scripts/db_setup.sh"},
-	// {stepType: COPY, file: "configs/environment", destination: "/var/www/pterodactyl/.env"},
-	// {stepType: RUN, file: "scripts/env_configuration.sh"},
-	// {stepType: COPY, file: "configs/pteroq.service", destination: "/etc/systemd/system/pteroq.service"},
-	// {stepType: RUN, file: "scripts/queue_listener.sh"},
+var installPanel = [8]*step{
+	{stepType: RUN, file: "scripts/install_dependencies.sh"},
+	{stepType: RUN, file: "scripts/db_setup.sh"},
+	{stepType: COPY, file: "configs/environment", destination: "/var/www/pterodactyl/.env"},
+	{stepType: RUN, file: "scripts/env_configuration.sh"},
+	{stepType: COPY, file: "configs/pteroq.service", destination: "/etc/systemd/system/pteroq.service"},
+	{stepType: RUN, file: "scripts/queue_listener.sh"},
 	{stepType: COPY, file: "configs/nginx.conf", destination: "/etc/nginx/sites-available/pterodactyl.conf"},
 	{stepType: RUN, file: "scripts/nginx_setup.sh"},
+}
+
+var createNode = [1]*step{
+	{stepType: RUN, file: "scripts/create_node.sh"},
+}
+
+var installWings = [3]*step{
+	{stepType: RUN, file: "scripts/install_docker.sh"},
+	{stepType: COPY, file: "configs/wings.service", destination: "/etc/systemd/system/wings.service"},
+	{stepType: RUN, file: "scripts/install_wings.sh"},
 }
 
 func getFileContent(file string, settings *settings) string {
@@ -102,6 +112,23 @@ func uploadFile(client *goph.Client, content string, destination string) error {
 	return nil
 }
 
+func runInstallSteps(client *goph.Client, steps []*step, settings *settings) {
+	for _, step := range steps {
+		fileData := getFileContent(step.file, settings)
+		if step.stepType == COPY {
+			err := uploadFile(client, fileData, step.destination)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			err := runCommand(client, fileData)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+}
+
 func main() {
 	generateCert(serverIp)
 	// Start new ssh connection with private key.
@@ -134,12 +161,8 @@ func main() {
 		Url:        &setting{value: serverIp, placeholder: "{{url}}"},
 	}
 
-	for _, step := range steps {
-		fileData := getFileContent(step.file, settings)
-		if step.stepType == COPY {
-			err = uploadFile(client, fileData, step.destination)
-		} else {
-			err = runCommand(client, fileData)
-		}
-	}
+	runInstallSteps(client, installPanel[:], settings)
+	runInstallSteps(client, createNode[:], settings)
+	runInstallSteps(client, installWings[:], settings)
+
 }
