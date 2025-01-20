@@ -1,5 +1,9 @@
 FROM scratch
 
+ENV GIN_MODE=release
+
+EXPOSE 8080
+
 USER 100
 
 COPY configs .

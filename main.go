@@ -119,8 +119,12 @@ func runInstallSteps(client *goph.Client, steps []*step, settings *settings) {
 
 func main() {
 
-	r := gin.Default()
-	r.POST("/install", runInstallation)
-	r.Run("localhost:8080")
+	app := gin.Default()
+	app.POST("/install", runInstallation)
 
+	if address := os.Getenv("ADDRESS"); address != "" {
+		port := os.Getenv("PORT")
+		app.Run(address + ":" + port)
+	}
+	app.Run()
 }
