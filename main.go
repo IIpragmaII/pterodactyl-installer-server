@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/melbahja/goph"
 	"golang.org/x/crypto/ssh"
 )
@@ -26,21 +27,6 @@ type setting struct {
 	value       string
 	placeholder string
 }
-
-type settings struct {
-	DbPassword *setting
-	Email      *setting
-	Timezone   *setting
-	Username   *setting
-	FirstName  *setting
-	LastName   *setting
-	Password   *setting
-	Url        *setting
-}
-
-var certPassword = os.Getenv("CERT_PASSWORD")
-var serverIp = os.Getenv("SERVER_IP")
-var certPath = os.Getenv("CERT_PATH")
 
 // Disable host verification for now.
 func VerifyHost(host string, remote net.Addr, key ssh.PublicKey) error {
@@ -87,8 +73,10 @@ func getFileContent(file string, settings *settings) string {
 	fields := reflect.ValueOf(*settings)
 
 	for i := 0; i < fields.NumField(); i++ {
-		field := fields.Field(i)
-		fileContent = strings.Replace(fileContent, field.Interface().(*setting).placeholder, field.Interface().(*setting).value, -1)
+		placeholder := fields.Type().Field(i).Tag.Get("placeholder")
+		if placeholder != "" {
+			fileContent = strings.Replace(fileContent, placeholder, fields.Field(i).String(), -1)
+		}
 	}
 
 	return fileContent
@@ -130,39 +118,9 @@ func runInstallSteps(client *goph.Client, steps []*step, settings *settings) {
 }
 
 func main() {
-	generateCert(serverIp)
-	// Start new ssh connection with private key.
-	auth, err := goph.Key(certPath, certPassword)
-	if err != nil {
-		log.Fatal(err)
-	}
-	client, err := goph.NewConn(&goph.Config{
-		User: "root", Addr: serverIp, Port: 22, Auth: auth, Callback: VerifyHost,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	// Defer closing the network connection.
-	defer client.Close()
-
-	cert, key := generateCert(serverIp)
-	err = uploadFile(client, cert, "/etc/ssl/pterodactyl-cert.pem")
-	err = uploadFile(client, key, "/etc/ssl/pterodactyl-key.pem")
-
-	settings := &settings{
-		DbPassword: &setting{value: os.Getenv("DB_PASSWORD"), placeholder: "{{db_password}}"},
-		Email:      &setting{value: os.Getenv("EMAIL"), placeholder: "{{email}}"},
-		Timezone:   &setting{value: os.Getenv("TIMEZONE"), placeholder: "{{timezone}}"},
-		Username:   &setting{value: os.Getenv("USERNAME"), placeholder: "{{username}}"},
-		FirstName:  &setting{value: os.Getenv("FIRST_NAME"), placeholder: "{{first_name}}"},
-		LastName:   &setting{value: os.Getenv("LAST_NAME"), placeholder: "{{last_name}}"},
-		Password:   &setting{value: os.Getenv("PASSWORD"), placeholder: "{{password}}"},
-		Url:        &setting{value: serverIp, placeholder: "{{url}}"},
-	}
-
-	runInstallSteps(client, installPanel[:], settings)
-	runInstallSteps(client, createNode[:], settings)
-	runInstallSteps(client, installWings[:], settings)
+	r := gin.Default()
+	r.POST("/install", runInstallation)
+	r.Run("localhost:8080")
 
 }
