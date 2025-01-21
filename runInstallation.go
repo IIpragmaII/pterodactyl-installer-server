@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/melbahja/goph"
@@ -26,17 +27,18 @@ func runInstallation(c *gin.Context) {
 
 	fmt.Print(err)
 
-	generateCert(settings.ServerIp)
 	// Start new ssh connection with private key.
 	auth, err := goph.RawKey(settings.Cert, settings.CertPassword)
 	if err != nil {
-		fmt.Print(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
 	}
 	client, err := goph.NewConn(&goph.Config{
 		User: "root", Addr: settings.ServerIp, Port: 22, Auth: auth, Callback: VerifyHost,
 	})
 	if err != nil {
-		fmt.Print(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
 	}
 
 	// Defer closing the network connection.
