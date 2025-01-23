@@ -23,7 +23,12 @@ func runCommand(client *goph.Client, cmd string) error {
 }
 
 func getFileContent(file string, settings *settings) string {
-	fileData, _ := os.ReadFile(file)
+	fileData, err := os.ReadFile(file)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fileContent := string(fileData)
 
 	fields := reflect.ValueOf(*settings)
