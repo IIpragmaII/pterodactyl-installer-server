@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"net"
 	"net/http"
 	"os"
@@ -50,8 +51,10 @@ func runInstallation(c *gin.Context) {
 
 	var auth goph.Auth
 	if settings.Cert != "" {
+		decodedCertBytes, _ := base64.StdEncoding.DecodeString(settings.Cert)
+		decodedCert := string(decodedCertBytes)
 		// Start new ssh connection with private key.
-		auth, err = goph.RawKey(settings.Cert, settings.Password)
+		auth, err = goph.RawKey(decodedCert, settings.Password)
 	} else {
 		auth = goph.Password(settings.Password)
 	}

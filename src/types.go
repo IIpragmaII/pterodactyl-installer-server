@@ -11,14 +11,14 @@ type step struct {
 }
 
 type settings struct {
-	DbPassword    string `json:"dbPassword" placeholder:"{{db_password}}"`
-	Email         string `json:"email" placeholder:"{{email}}"`
-	Timezone      string `json:"timezone" placeholder:"{{timezone}}"`
-	PteroUsername string `json:"pteroUsername" placeholder:"{{username}}"`
-	FirstName     string `json:"firstName" placeholder:"{{first_name}}"`
-	LastName      string `json:"lastName" placeholder:"{{last_name}}"`
-	PteroPassword string `json:"pteroPassword" placeholder:"{{password}}"`
+	DbPassword    string `json:"dbPassword" placeholder:"{{db_password}}" binding:"required"`
+	Email         string `json:"email" placeholder:"{{email}}" binding:"required"`
+	Timezone      string `json:"timezone" placeholder:"{{timezone}}" binding:"required"`
+	PteroUsername string `json:"pteroUsername" placeholder:"{{username}}" binding:"required"`
+	FirstName     string `json:"firstName" placeholder:"{{first_name}}" binding:"required"`
+	LastName      string `json:"lastName" placeholder:"{{last_name}}" binding:"required"`
+	PteroPassword string `json:"pteroPassword" placeholder:"{{password}}" binding:"required"`
 	Cert          string `json:"cert"`
-	Password      string `json:"password"`
-	ServerIp      string `json:"serverIp" placeholder:"{{url}}"`
+	Password      string `json:"password" binding:"required"`
+	ServerIp      string `json:"serverIp" placeholder:"{{url}}" binding:"required"`
 }
